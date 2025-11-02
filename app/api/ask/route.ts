@@ -1,3 +1,8 @@
+// Enable LangSmith tracing
+if (process.env.LANGCHAIN_API_KEY) {
+  process.env.LANGCHAIN_TRACING_V2 = "true";
+  process.env.LANGCHAIN_PROJECT = "producthunt-agent";
+}
 import { NextRequest, NextResponse } from 'next/server';
 import { ChatOpenAI } from '@langchain/openai';
 import { DynamicTool } from '@langchain/core/tools';
