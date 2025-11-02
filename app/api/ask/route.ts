@@ -98,14 +98,10 @@ export async function POST(request: NextRequest) {
     const tools = [scrapeProductHuntTool];
 
 const prompt = ChatPromptTemplate.fromMessages([
-  ['system', `You are a Product Hunt analyst. Use the scrape_product_hunt tool to get data, then answer the user's question.
-
-  Your response must be ONLY valid JSON with this structure:
-  {
-  "answer": "Your answer here",
-  "visualization": "bar_chart",
-  "data": []
-  }
+  ['system', 'You are a Product Hunt analyst. Use the scrape_product_hunt tool to get data, then answer questions. Return valid JSON with answer, visualization, and data fields.'],
+  ['human', '{input}'],
+  new MessagesPlaceholder('agent_scratchpad'),
+  ]);
 
   Visualization options: bar_chart, sentiment_cards, product_grid, pie_chart, text_only`],
   ['human', '{input}'],
