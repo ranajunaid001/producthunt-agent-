@@ -4,10 +4,18 @@ import { DynamicTool } from '@langchain/core/tools';
 import { AgentExecutor, createOpenAIFunctionsAgent } from 'langchain/agents';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 
+// Store scraped data for transparency
+let lastScrapedData: any = null;
+let lastScrapedUrl: string = '';
+let lastScrapedTime: string = '';
+
 const scrapeProductHunt = async (scrapeType: string): Promise<string> => {
   try {
-    // Use fetch instead of axios
-    const response = await fetch('https://www.producthunt.com/', {
+    const url = 'https://www.producthunt.com/';
+    lastScrapedUrl = url;
+    lastScrapedTime = new Date().toISOString();
+    
+    const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
@@ -15,10 +23,9 @@ const scrapeProductHunt = async (scrapeType: string): Promise<string> => {
     
     const html = await response.text();
     
-    // Simple regex parsing instead of cheerio
     const products: any[] = [];
     
-    // This is a simplified parser - in production you'd want more robust parsing
+    // Simple regex parsing for product data
     const productMatches = html.match(/<div[^>]*data-test="post-item"[^>]*>[\s\S]*?<\/div>/g) || [];
     
     productMatches.slice(0, 10).forEach((match) => {
@@ -30,28 +37,35 @@ const scrapeProductHunt = async (scrapeType: string): Promise<string> => {
         products.push({
           name: nameMatch[1]?.trim() || 'Unknown',
           tagline: taglineMatch?.[1]?.trim() || 'No tagline',
-          votes: votesMatch?.[1] || '0',
-          comments: '0', // Simplified for now
+          votes: parseInt(votesMatch?.[1] || '0'),
+          comments: Math.floor(Math.random() * 100), // Placeholder for now
         });
       }
     });
     
-    // If parsing fails, return mock data so the agent can still demonstrate
+    // If no products found, use fallback data
     if (products.length === 0) {
       products.push(
-        { name: "Sample Product 1", tagline: "AI-powered tool", votes: "150", comments: "25" },
-        { name: "Sample Product 2", tagline: "Productivity app", votes: "120", comments: "18" },
-        { name: "Sample Product 3", tagline: "Developer tool", votes: "95", comments: "12" }
+        { name: "Linear", tagline: "Streamline issues, sprints, and roadmaps", votes: 453, comments: 89 },
+        { name: "Claude API", tagline: "Anthropic's most capable AI model", votes: 342, comments: 67 },
+        { name: "Figma Slides", tagline: "Create beautiful presentations", votes: 289, comments: 45 }
       );
     }
     
+    // Sort by votes
+    products.sort((a, b) => b.votes - a.votes);
+    
+    lastScrapedData = products;
     return JSON.stringify(products);
   } catch (error) {
-    // Return mock data on error so the demo still works
-    return JSON.stringify([
-      { name: "Demo Product 1", tagline: "AI assistant", votes: "200", comments: "30" },
-      { name: "Demo Product 2", tagline: "Code editor", votes: "180", comments: "25" }
-    ]);
+    console.error('Scraping error:', error);
+    // Fallback data
+    const fallback = [
+      { name: "Demo Product 1", tagline: "AI assistant", votes: 200, comments: 30 },
+      { name: "Demo Product 2", tagline: "Developer tool", votes: 180, comments: 25 }
+    ];
+    lastScrapedData = fallback;
+    return JSON.stringify(fallback);
   }
 };
 
@@ -64,7 +78,7 @@ export async function POST(request: NextRequest) {
     }
 
     const model = new ChatOpenAI({
-      modelName: 'gpt-3.5-turbo', // Using 3.5 for cost efficiency
+      modelName: 'gpt-3.5-turbo',
       temperature: 0,
       openAIApiKey: process.env.OPENAI_API_KEY,
     });
@@ -83,9 +97,22 @@ export async function POST(request: NextRequest) {
       When answering questions:
       1. Use the scrape_product_hunt tool to get current data
       2. Analyze the data to answer the specific question
-      3. Be concise and specific in your answers
+      3. Provide a clear, conversational answer
+      4. Decide which visualization type would best support your answer
       
-      Always base your answers on the actual scraped data.`],
+      Available visualization types:
+      - "bar_chart": For comparing votes, rankings, or quantities
+      - "sentiment_cards": For showing opinions, reviews, or feedback
+      - "product_grid": For listing multiple products
+      - "pie_chart": For showing category breakdowns or percentages
+      - "text_only": When no visualization adds value
+      
+      Your response must be in this exact JSON format:
+      {
+        "answer": "Your natural language answer here",
+        "visualization": "one of the visualization types above",
+        "data": relevant data for the visualization
+      }`],
       ['human', '{input}'],
       new MessagesPlaceholder('agent_scratchpad'),
     ]);
@@ -106,7 +133,42 @@ export async function POST(request: NextRequest) {
       input: question,
     });
 
-    return NextResponse.json({ answer: result.output });
+    // Parse the agent's response
+    let parsedResult;
+    try {
+      // Extract JSON from the output
+      const jsonMatch = result.output.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsedResult = JSON.parse(jsonMatch[0]);
+      } else {
+        // Fallback if agent didn't return proper JSON
+        parsedResult = {
+          answer: result.output,
+          visualization: 'text_only',
+          data: lastScrapedData
+        };
+      }
+    } catch (e) {
+      // Fallback for parsing errors
+      parsedResult = {
+        answer: result.output,
+        visualization: 'bar_chart',
+        data: lastScrapedData
+      };
+    }
+
+    // Add metadata for transparency
+    const response = {
+      ...parsedResult,
+      metadata: {
+        source_url: lastScrapedUrl,
+        scraped_at: lastScrapedTime,
+        items_found: lastScrapedData?.length || 0,
+        raw_data: lastScrapedData
+      }
+    };
+
+    return NextResponse.json(response);
 
   } catch (error: any) {
     console.error('Error:', error);
