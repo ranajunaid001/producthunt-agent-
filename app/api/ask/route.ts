@@ -3,6 +3,7 @@ if (process.env.LANGCHAIN_API_KEY) {
   process.env.LANGCHAIN_TRACING_V2 = "true";
   process.env.LANGCHAIN_PROJECT = "producthunt-agent";
 }
+
 import { NextRequest, NextResponse } from 'next/server';
 import { ChatOpenAI } from '@langchain/openai';
 import { DynamicTool } from '@langchain/core/tools';
@@ -112,11 +113,11 @@ export async function POST(request: NextRequest) {
       - "pie_chart": For showing category breakdowns or percentages
       - "text_only": When no visualization adds value
       
-      Your response must be in this exact JSON format:
+      Always respond with valid JSON in this format:
       {
-        "answer": "Your natural language answer here",
-        "visualization": "one of the visualization types above",
-        "data": relevant data for the visualization
+        "answer": "your natural language answer",
+        "visualization": "choose one: bar_chart, sentiment_cards, product_grid, pie_chart, or text_only",
+        "data": []
       }`],
       ['human', '{input}'],
       new MessagesPlaceholder('agent_scratchpad'),
