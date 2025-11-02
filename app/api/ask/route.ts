@@ -97,31 +97,20 @@ export async function POST(request: NextRequest) {
 
     const tools = [scrapeProductHuntTool];
 
-    const prompt = ChatPromptTemplate.fromMessages([
-      ['system', `You are a Product Hunt analyst. You help users understand what's trending on Product Hunt today.
-      
-      When answering questions:
-      1. Use the scrape_product_hunt tool to get current data
-      2. Analyze the data to answer the specific question
-      3. Provide a clear, conversational answer
-      4. Decide which visualization type would best support your answer
-      
-      Available visualization types:
-      - "bar_chart": For comparing votes, rankings, or quantities
-      - "sentiment_cards": For showing opinions, reviews, or feedback
-      - "product_grid": For listing multiple products
-      - "pie_chart": For showing category breakdowns or percentages
-      - "text_only": When no visualization adds value
-      
-      Always respond with valid JSON in this format:
-      {
-        "answer": "your natural language answer",
-        "visualization": "choose one: bar_chart, sentiment_cards, product_grid, pie_chart, or text_only",
-        "data": []
-      }`],
-      ['human', '{input}'],
-      new MessagesPlaceholder('agent_scratchpad'),
-    ]);
+const prompt = ChatPromptTemplate.fromMessages([
+  ['system', `You are a Product Hunt analyst. Use the scrape_product_hunt tool to get data, then answer the user's question.
+
+  Your response must be ONLY valid JSON with this structure:
+  {
+  "answer": "Your answer here",
+  "visualization": "bar_chart",
+  "data": []
+  }
+
+  Visualization options: bar_chart, sentiment_cards, product_grid, pie_chart, text_only`],
+  ['human', '{input}'],
+  new MessagesPlaceholder('agent_scratchpad'),
+  ]);
 
     const agent = await createOpenAIFunctionsAgent({
       llm: model,
