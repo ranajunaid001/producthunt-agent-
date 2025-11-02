@@ -9,6 +9,8 @@ Features
 	• Smart Visualizations: AI automatically chooses the best way to display data
 	• Full Transparency: Shows source data, timestamps, and verification links
 	• LangSmith Integration: Complete observability and debugging capabilities
+
+
 	
 Tech Stack
 	• Frontend: Next.js 14 (App Router), React, TypeScript
@@ -16,6 +18,8 @@ Tech Stack
 	• Monitoring: LangSmith
 	• Deployment: Vercel
 	• Styling: Inline styles (Jony Ive-inspired minimalist design)
+
+
 	
 Project Structure
 producthunt-agent/
@@ -42,18 +46,25 @@ The core of the application. This file:
 		○ Visualization type (bar_chart, sentiment_cards, product_grid, etc.)
 		○ Raw data and metadata for transparency
 	• Integrates LangSmith for tracing and debugging
+
+
+
 	
 /app/page.tsx
 Simple landing page that displays:
 	• API endpoint information
 	• Example questions users can ask
 	• Instructions for making POST requests
-	
+
+
+
 /app/layout.tsx
 Root layout that wraps all pages with:
 	• HTML structure
 	• Metadata (title, description)
 	• Global CSS import
+
+
 	
 Environment Variables
 Required in Vercel:
@@ -62,6 +73,9 @@ LANGCHAIN_TRACING_V2=true               # Enable LangSmith tracing
 LANGCHAIN_API_KEY=ls__...                # LangSmith API key
 LANGCHAIN_PROJECT=producthunt-agent      # LangSmith project name
 LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+
+
+
 API Usage
 Endpoint: POST /api/ask
 Request Body:
@@ -80,6 +94,8 @@ Response:
     "raw_data": [...]
   }
 }
+
+
 How It Works
 	1. User asks a question about Product Hunt
 	2. LangChain agent processes the question
@@ -88,8 +104,12 @@ How It Works
 	5. Agent decides visualization type based on the question
 	6. Returns structured response with answer + visualization recommendation
 	7. LangSmith tracks every step for debugging
-	
+
+
+
 Development Status
+
+
 Completed ✅
 	• Basic Next.js setup with TypeScript
 	• LangChain agent implementation
@@ -98,7 +118,9 @@ Completed ✅
 	• Visualization type selection
 	• LangSmith integration
 	• Vercel deployment
-	
+
+
+
 Pending Implementation 🚧
 	1. Frontend UI:
 		○ Beautiful Jony Ive-inspired interface
@@ -113,29 +135,36 @@ Pending Implementation 🚧
 		○ Automated testing
 		○ Prompt optimization
 		○ Performance monitoring
-		
+
+
 Deployment
 	• Production URL: https://producthunt-agent.vercel.app/
 	• GitHub Repository: https://github.com/ranajunaid001/producthunt-agent-
 	• Deployment Platform: Vercel (auto-deploys from main branch)
-	
+
+
+
 Next Steps
 	1. Implement the frontend UI with dynamic visualizations
 	2. Enhance scraping to get real comments and reviews
 	3. Create LangSmith test datasets for quality assurance
 	4. Add more sophisticated question handling
 	5. Implement caching for better performance
-	
+
+
+
 Example Questions
 	• "Which product has the most votes?"
 	• "Are there any AI products launched today?"
 	• "What do people think about Linear?"
 	• "Show me the top 3 products by comments"
 	• "What categories are trending today?"
-	
+
+
+
 Notes
 	• Currently using mock comment data (real vote counts when available)
 	• Scraping is done via regex parsing to avoid dependency issues
 	• The AI agent can handle any question about Product Hunt, not just predefined ones
 	• LangSmith provides full visibility into the agent's decision-making process
-<img width="1268" height="5636" alt="image" src="https://github.com/user-attachments/assets/20763723-a856-4dd3-9ea7-f3e2b0b0f692" />
+<img width="1268" height="6834" alt="image" src="https://github.com/user-attachments/assets/5aba8993-3cca-4e65-bcba-a0fde690a6ab" />
